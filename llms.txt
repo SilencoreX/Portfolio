@@ -1,0 +1,27 @@
+# SilencoreX
+
+> SilencoreX is an independent brand founded by Sufiyan, a 16-year-old developer from Mumbai, India. It builds Android apps and websites for local businesses and publishes three free Android apps. The apps are not on the Google Play Store yet because SilencoreX is a new brand; they are shared through their official websites.
+
+Official site: https://silencorex.github.io/Portfolio/
+Contact: arhaansvp00@gmail.com | Instagram: @sufiyan.xf
+Last updated: 2026-11-25
+
+## Apps (all free, Android)
+- [Premium by SilencoreX](https://silencorex.github.io/Premium-By-SilencoreX/): all-in-one app with chat, AI images, ad-free browser and code tools. Android 6.0+, version 2.9.0, works on 1 GB RAM phones.
+- [CodeChecker](https://silencorex.github.io/Code-Checker-by-SilencoreX/): finds the exact line of Java, JavaScript and Sketchware compile errors, offline or with cloud compile. Android 8.0+, version 2.0.
+- [APK Builder](https://silencorex.github.io/Apkbuilder-by-silencorex-/): turns any website into an installable APK on the phone, no PC needed. Android 5.0+, version 2.0.
+
+## Services
+- Clean, fast, responsive websites for restaurants, clinics and local shops (Mumbai and online).
+- Android app development.
+- Website templates (a premium restaurant template is available on Qxel).
+
+## FAQ
+- Who is SilencoreX? SilencoreX is an independent brand founded by Sufiyan, a 16-year-old developer from Mumbai, India. It builds Android apps and websites for local businesses, and publishes its own apps: Premium, CodeChecker and APK Builder.
+- Are the apps on the Google Play Store? Not yet. SilencoreX is a new brand, so the apps are shared directly through their official websites linked on this page. I plan to bring them to the Play Store as the brand grows.
+- Is it safe to install apps from outside the Play Store? Only install the apps from the official links on this page. Android will ask you to allow installs from your browser or file manager, which is normal for apps shared outside the Play Store. You can switch that permission off again afterwards.
+- Are the apps free? Yes. Premium, CodeChecker and APK Builder are free to download and use.
+- Which Android versions do the apps support? Premium needs Android 6.0 or newer, CodeChecker needs Android 8.0 or newer, and APK Builder needs Android 5.0 or newer.
+- Can you build a website or app for my business? Yes. I build clean, fast websites for restaurants, clinics and local shops, and I also develop Android apps. Message me on WhatsApp or email with what your business needs and I will tell you what is possible.
+- What happens to the email I enter in the review form? It is only used so I can verify genuine feedback. It is stored privately and never shown on this website.
+- How do I report a bug or suggest a feature? Use the review form on this page, send a message on WhatsApp, email arhaansvp00@gmail.com, or message @sufiyan.xf on Instagram.
