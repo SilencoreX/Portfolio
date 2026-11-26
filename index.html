@@ -504,7 +504,7 @@ html.building #as{display:none}
 .stars input:focus-visible+label{outline:2px solid var(--ink);outline-offset:2px;border-radius:6px}
 .hp{position:absolute!important;left:-9999px;width:1px;height:1px;opacity:0}
 .rstatus{font-size:.88rem;min-height:1.3em;color:var(--muted)}
-.rstatus.err{color:#c0392b}.rstatus.ok{color:var(--ok)}
+.rstatus.err,.rstatus.ok{color:var(--ink)}
 .rlist{display:grid;gap:14px}
 .rcard{border-radius:22px;padding:20px 22px}
 .rcard .rh{display:flex;justify-content:space-between;gap:12px;align-items:baseline;margin-bottom:6px}
@@ -512,6 +512,10 @@ html.building #as{display:none}
 .rcard p{color:var(--muted);font-size:.93rem}
 .rcard small{display:block;margin-top:8px;color:var(--muted);font-size:.78rem}
 .rempty{color:var(--muted);font-size:.95rem;padding:8px 4px}
+.rcard .rhelp{margin-top:12px;display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:999px;padding:8px 13px;background:transparent;color:var(--ink);font:500 .82rem var(--f);cursor:pointer;transition:background .2s,transform .2s}
+.rcard .rhelp:hover{background:rgba(127,127,135,.12)}
+.rcard .rhelp:active{transform:scale(.97)}
+.rcard .rhelp:disabled{opacity:.55;cursor:default}
 footer .upd{display:block;margin-top:6px;font-size:.78rem;opacity:.8}
 @media(max-width:860px){.rev-grid{grid-template-columns:1fr}}
 .links a{padding:9px 11px}
@@ -742,7 +746,7 @@ html.menu-open[data-theme=dark] .links .cta{color:#fff}
   <div class="wrap">
     <div class="eyebrow">Reviews</div>
     <h2>What people say.</h2>
-    <p class="sub">Tried an app or worked with me? Leave a short review. It appears here after I approve it.</p>
+    <p class="sub">Tried an app or worked with me? Leave a short review and let others know what you think.</p>
     <div class="rev-grid">
       <form class="rform glass" id="rform" novalidate>
         <label>Name<input name="name" type="text" maxlength="60" autocomplete="name" required></label>
@@ -1246,35 +1250,45 @@ form.addEventListener('submit',function(e){
     return;
   }
   var id=rid(),now=new Date().toISOString(),btn=form.querySelector('button');btn.disabled=true;btn.textContent='Sending…';say('');
-  post('reviews',id,{name:{stringValue:name},message:{stringValue:msg},rating:{integerValue:String(rating)},approved:{booleanValue:true},createdAt:{timestampValue:now}})
+  post('reviews',id,{name:{stringValue:name},message:{stringValue:msg},rating:{integerValue:String(rating)},approved:{booleanValue:true},helpfulCount:{integerValue:'0'},createdAt:{timestampValue:now}})
     .then(function(){return post('reviewEmails',id,{email:{stringValue:email},createdAt:{timestampValue:now}})})
-    .then(function(){form.reset();try{localStorage.setItem('sx_rv',String(Date.now()))}catch(x){}say('Thank you! Your review was received and will appear after approval.','ok')})
+    .then(function(){form.reset();try{localStorage.setItem('sx_rv',String(Date.now()))}catch(x){}say('Thank you! Your review has been published.','ok');loadReviews()})
     .catch(function(err){fail(err,name,email,rating,msg)})
     .then(function(){btn.disabled=false;btn.textContent='Send review'});
 });
 function card(o){
-  var c=document.createElement('div');c.className='rcard glass';
+  var c=document.createElement('div');c.className='rcard glass';c.dataset.reviewId=o.id;
   var h=document.createElement('div');h.className='rh';
   var b=document.createElement('b');b.textContent=o.name;
   var s=document.createElement('span');s.className='rs';s.textContent='★★★★★'.slice(0,o.rating)+'☆☆☆☆☆'.slice(0,5-o.rating);s.setAttribute('aria-label',o.rating+' out of 5 stars');
   h.appendChild(b);h.appendChild(s);
   var p=document.createElement('p');p.textContent=o.message;c.appendChild(h);c.appendChild(p);
   if(o.date){var m=document.createElement('small');m.textContent=o.date;c.appendChild(m)}
-  return c;
+  var vote=document.createElement('button');vote.type='button';vote.className='rhelp';vote.textContent='Helpful · '+(o.helpful||0);vote.setAttribute('aria-label','Mark this review helpful');
+  var voted=false;try{voted=localStorage.getItem('sx_help_'+o.id)==='1'}catch(x){}
+  if(voted){vote.disabled=true;vote.textContent='Marked helpful · '+(o.helpful||0)}
+  vote.addEventListener('click',function(){
+    if(vote.disabled)return;vote.disabled=true;vote.textContent='Saving…';
+    fetch(base+'/'+encodeURIComponent(o.id)+'?key='+FB.apiKey).then(function(r){if(!r.ok)throw new Error('Could not load review');return r.json()}).then(function(doc){
+      var old=doc.fields&&doc.fields.helpfulCount?parseInt(doc.fields.helpfulCount.integerValue,10)||0:0;
+      return fetch(base+'/'+encodeURIComponent(o.id)+'?updateMask.fieldPaths=helpfulCount&key='+FB.apiKey,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({fields:{helpfulCount:{integerValue:String(old+1)}}})}).then(function(r){if(!r.ok)throw new Error('Could not save vote');return r.json()}).then(function(){try{localStorage.setItem('sx_help_'+o.id,'1')}catch(x){}vote.textContent='Marked helpful · '+(old+1);loadReviews()});
+    }).catch(function(){vote.disabled=false;vote.textContent='Helpful · '+(o.helpful||0);say('Could not save your helpful vote. Please try again.','err')});
+  });
+  c.appendChild(vote);return c;
 }
-if(ready){
+function loadReviews(){
+  if(!ready)return;
   fetch(base+':runQuery?key='+FB.apiKey,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({structuredQuery:{
-    from:[{collectionId:'reviews'}],where:{fieldFilter:{field:{fieldPath:'approved'},op:'EQUAL',value:{booleanValue:true}}},limit:24}})})
-  .then(function(r){return r.json()}).then(function(rows){
-    var items=(rows||[]).filter(function(r){return r.document}).map(function(r){var f=r.document.fields||{};
-      var t=f.createdAt&&f.createdAt.timestampValue?new Date(f.createdAt.timestampValue):null;
-      return{name:(f.name||{}).stringValue||'Anonymous',message:(f.message||{}).stringValue||'',rating:Math.max(1,Math.min(5,parseInt((f.rating||{}).integerValue,10)||5)),
-        t:t,date:t?t.toLocaleDateString('en-IN',{month:'short',year:'numeric'}):''}});
-    items.sort(function(a,b){return (b.t||0)-(a.t||0)});
-    if(!items.length)return;
-    list.textContent='';items.forEach(function(o){list.appendChild(card(o))});
+    from:[{collectionId:'reviews'}],where:{fieldFilter:{field:{fieldPath:'approved'},op:'EQUAL',value:{booleanValue:true}}},orderBy:[{field:{fieldPath:'createdAt'},direction:'DESCENDING'}]}})})
+  .then(function(r){if(!r.ok)throw new Error('Could not load reviews');return r.json()}).then(function(rows){
+    var items=(rows||[]).filter(function(r){return r.document}).map(function(r){var f=r.document.fields||{},t=f.createdAt&&f.createdAt.timestampValue?new Date(f.createdAt.timestampValue):null;
+      return{id:r.document.name.split('/').pop(),name:(f.name||{}).stringValue||'Anonymous',message:(f.message||{}).stringValue||'',rating:Math.max(1,Math.min(5,parseInt((f.rating||{}).integerValue,10)||5)),helpful:parseInt((f.helpfulCount||{}).integerValue,10)||0,t:t,date:t?t.toLocaleDateString('en-IN',{month:'short',year:'numeric'}):''}});
+    list.textContent='';if(!items.length){var empty=document.createElement('p');empty.className='rempty';empty.textContent='No reviews yet. Be the first to leave one.';list.appendChild(empty);return;}
+    items.sort(function(a,b){return (b.helpful-a.helpful)||((b.t?b.t.getTime():0)-(a.t?a.t.getTime():0))});
+    items.forEach(function(o){list.appendChild(card(o))});
   }).catch(function(){});
 }
+if(ready){loadReviews();setInterval(loadReviews,5000)}
 })();
 </script>
 <script>
