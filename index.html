@@ -1213,11 +1213,22 @@ function post(col,id,fields){
 function mailto(name,email,rating,msg){
   return 'mailto:'+EMAIL+'?subject='+encodeURIComponent('Review from '+name)+'&body='+encodeURIComponent('Name: '+name+'\nEmail: '+email+'\nRating: '+rating+'/5\n\n'+msg);
 }
+function hint(err){
+  var m=String(err&&err.message||'').toLowerCase(),c=err&&err.code;
+  if(/referer|referrer|blocked/.test(m))return 'The API key is restricted. In Google Cloud > Credentials, set the key to no application restriction.';
+  if(/has not been used|disabled/.test(m))return 'The Cloud Firestore API is switched off for this project.';
+  if(c===404)return 'Firestore database not found. Create the (default) database.';
+  if(c===403||/permission/.test(m))return 'Firestore rules are blocking the write. Publish rules under Firestore Database > Rules.';
+  if(c===400)return 'Bad request. Check projectId and apiKey.';
+  return '';
+}
 function fail(err,name,email,rating,msg){
   if(window.console)console.error('Review save failed:',err);
   st.className='rstatus err';st.textContent='Could not save your review (code '+(err&&err.code||'network')+'). ';
   var a=document.createElement('a');a.href=mailto(name,email,rating,msg);a.textContent='Send it by email instead';
   st.appendChild(a);
+  var raw=String(err&&err.message||'').slice(0,180),h=hint(err);
+  if(raw||h){var sm=document.createElement('small');sm.style.display='block';sm.style.marginTop='6px';sm.style.opacity='.85';sm.textContent=(h?h+' ':'')+(raw?'['+raw+']':'');st.appendChild(sm)}
 }
 form.addEventListener('submit',function(e){
   e.preventDefault();
@@ -1269,6 +1280,15 @@ if(ready){
 <script>
 (function(){
 var root=document.documentElement,$=function(q){return document.querySelector(q)};
+// ===== in-page links scroll with JS; the URL/hash never changes, so in-app browsers cannot reload =====
+document.addEventListener('click',function(e){
+  var a=e.target.closest&&e.target.closest('a[href^="#"]');
+  if(!a||e.defaultPrevented||e.ctrlKey||e.metaKey||e.shiftKey||e.button)return;
+  e.preventDefault();
+  var id=a.getAttribute('href').slice(1),t=id?document.getElementById(id):null;
+  root.classList.remove('menu-open');
+  window.scrollTo({top:t?Math.max(0,t.getBoundingClientRect().top+window.scrollY):0,behavior:'smooth'});
+});
 // ===== menu: the ink floods in from the button (same front as the theme switch) =====
 var btn=$('.mb'),menu=$('#menu'),anim=null;
 function ink(dir){
