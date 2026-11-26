@@ -1,0 +1,27 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Public reviews: anyone can submit (unapproved), only approved ones can be read.
+    match /reviews/{id} {
+      allow read: if resource.data.approved == true;
+      allow create: if request.resource.data.keys().hasOnly(['name','message','rating','approved','createdAt'])
+        && request.resource.data.approved == false
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 2 && request.resource.data.name.size() <= 60
+        && request.resource.data.message is string
+        && request.resource.data.message.size() >= 10 && request.resource.data.message.size() <= 600
+        && request.resource.data.rating is int
+        && request.resource.data.rating >= 1 && request.resource.data.rating <= 5
+        && request.resource.data.createdAt is timestamp;
+    }
+
+    // Private emails: write-only from the website, readable only in the Firebase console.
+    match /reviewEmails/{id} {
+      allow create: if request.resource.data.keys().hasOnly(['email','createdAt'])
+        && request.resource.data.email is string
+        && request.resource.data.email.size() <= 120
+        && request.resource.data.createdAt is timestamp;
+    }
+  }
+}
