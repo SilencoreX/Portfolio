@@ -1450,8 +1450,8 @@ form.addEventListener('submit',function(e){
     .then(function(){form.reset();try{localStorage.setItem('sx_rv',String(Date.now()))}catch(x){}say('Thank you! Your review has been published.','ok');loadReviews(true)})
     .catch(function(err){fail(err,name,email,rating,msg)})
     .then(function(){btn.disabled=false;btn.textContent='Send review'});
-});
-var allItems=[],showAll=false,lastSig='',lastLoad=0,busy=false;
+},true);
+var allItems=[],showAll=false,lastSig='',lastLoad=0,busy=false,refreshPending=false;
 function card(o){
   var c=document.createElement('div');c.className='rcard glass';c.dataset.reviewId=o.id;
   var h=document.createElement('div');h.className='rh';
@@ -1475,4 +1475,187 @@ function card(o){
         });
     }).catch(function(err){
       if(window.console)console.error('Helpful vote failed:',err);
-      vote.disabled=false;vote.t
+      vote.disabled=false;vote.textContent='Helpful · '+(o.helpful||0);say('Could not save helpful vote: '+(err&&err.message?err.message:'Please try again.'),'err');
+    });
+  });
+  c.appendChild(vote);return c;
+}
+function render(anim){
+  list.textContent='';
+  if(!allItems.length){var empty=document.createElement('p');empty.className='rempty';empty.textContent='No reviews yet. Be the first to leave one.';list.appendChild(empty);return}
+  var sum=0;allItems.forEach(function(o){sum+=o.rating});
+  var avg=(sum/allItems.length).toFixed(1),head=document.createElement('div');head.className='rsum';
+  var big=document.createElement('b');big.textContent=avg;
+  var mid=document.createElement('div'),st5=document.createElement('span');st5.className='rs';st5.textContent='★★★★★'.slice(0,Math.round(avg))+'☆☆☆☆☆'.slice(0,5-Math.round(avg));
+  var sm=document.createElement('small');sm.textContent='from '+allItems.length+' review'+(allItems.length>1?'s':'');
+  mid.appendChild(st5);mid.appendChild(sm);head.appendChild(big);head.appendChild(mid);list.appendChild(head);
+  (showAll?allItems:allItems.slice(0,5)).forEach(function(o,i){
+    var c=card(o);if(anim&&i>=5){c.classList.add('rin');c.style.setProperty('--d',i-5)}list.appendChild(c);
+  });
+  if(allItems.length>5){
+    var more=document.createElement('button');more.type='button';more.className='rmore glass';more.setAttribute('aria-expanded',showAll?'true':'false');
+    var stack=document.createElement('span');stack.className='stack';
+    allItems.slice(0,3).forEach(function(o){var b=document.createElement('b');b.textContent=(o.name.trim().charAt(0)||'?').toUpperCase();stack.appendChild(b)});
+    var t=document.createElement('span');t.className='rm-t';t.textContent=showAll?'Show fewer reviews':'See all '+allItems.length+' reviews';
+    var ch=document.createElementNS('http://www.w3.org/2000/svg','svg');ch.setAttribute('viewBox','0 0 24 24');ch.setAttribute('class','chev');ch.setAttribute('fill','none');ch.setAttribute('stroke','currentColor');ch.setAttribute('stroke-width','2');ch.setAttribute('stroke-linecap','round');ch.setAttribute('stroke-linejoin','round');
+    var path=document.createElementNS('http://www.w3.org/2000/svg','path');path.setAttribute('d','M6 9l6 6 6-6');ch.appendChild(path);
+    more.appendChild(stack);more.appendChild(t);more.appendChild(ch);
+    more.addEventListener('click',function(){showAll=!showAll;render(showAll)});
+    list.appendChild(more);
+  }
+}
+function loadReviews(force){
+  if(!ready)return;
+  if(busy){if(force)refreshPending=true;return;}
+  busy=true;
+  fetch(base+':runQuery?key='+FB.apiKey,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({structuredQuery:{
+    from:[{collectionId:'reviews'}],
+    where:{fieldFilter:{field:{fieldPath:'approved'},op:'EQUAL',value:{booleanValue:true}}},
+    limit:100}})})
+  .then(function(r){return r.ok?r.json():fsErr(r)}).then(function(rows){
+    var items=(rows||[]).filter(function(r){return r.document}).map(function(r){var f=r.document.fields||{},t=f.createdAt&&f.createdAt.timestampValue?new Date(f.createdAt.timestampValue):null;
+      return{id:r.document.name.split('/').pop(),name:(f.name||{}).stringValue||'Anonymous',message:(f.message||{}).stringValue||'',rating:Math.max(1,Math.min(5,parseInt((f.rating||{}).integerValue,10)||5)),helpful:parseInt((f.helpfulCount||{}).integerValue,10)||0,t:t,date:t?t.toLocaleDateString('en-IN',{month:'short',year:'numeric'}):''}});
+    items.sort(function(a,b){return (b.helpful-a.helpful)||((b.t?b.t.getTime():0)-(a.t?a.t.getTime():0))});
+    var sig=JSON.stringify(items.map(function(o){return [o.id,o.helpful,o.rating,o.message]}));
+    lastLoad=Date.now();
+    if(sig!==lastSig||force){lastSig=sig;allItems=items;render()}   // only redraw when something changed
+  }).catch(function(err){
+    if(window.console)console.error('Reviews could not load:',err);
+    if(!allItems.length){
+      list.textContent='Reviews could not be loaded: '+String(err&&err.message||'Please try again shortly.');
+    }
+  }).then(function(){
+    busy=false;
+    if(refreshPending){
+      refreshPending=false;
+      loadReviews(true);
+    }
+  });
+}
+if(ready){
+  if(list&&!allItems.length)list.textContent='Loading reviews…';
+  loadReviews(true);
+  // refresh gently: only while the tab is visible, and never more than every 90 seconds (saves Firestore reads)
+  setInterval(function(){if(!document.hidden&&Date.now()-lastLoad>90000)loadReviews()},30000);
+  document.addEventListener('visibilitychange',function(){if(!document.hidden&&Date.now()-lastLoad>60000)loadReviews()});
+}
+})();
+</script>
+<a id="rfab" class="glass" href="#reviews" aria-label="Write a review"><span aria-hidden="true">★</span><span class="t">Write a review</span></a>
+<script>
+(function(){
+var root=document.documentElement,$=function(q){return document.querySelector(q)};
+// ===== in-page links scroll with JS; the URL/hash never changes, so in-app browsers cannot reload =====
+document.addEventListener('click',function(e){
+  var a=e.target.closest&&e.target.closest('a[href^="#"]');
+  if(!a||e.defaultPrevented||e.ctrlKey||e.metaKey||e.shiftKey||e.button)return;
+  e.preventDefault();
+  var id=a.getAttribute('href').slice(1),t=id?document.getElementById(id):null;
+  root.classList.remove('menu-open');
+  window.scrollTo({top:t?Math.max(0,t.getBoundingClientRect().top+window.scrollY):0,behavior:'smooth'});
+});
+// ===== menu: the ink floods in from the button (same front as the theme switch) =====
+var btn=$('.mb'),menu=$('#menu'),anim=null;
+function ink(dir){
+  var r=btn.getBoundingClientRect(),W=innerWidth,H=innerHeight,kf=[],i;
+  for(i=0;i<=40;i++)kf.push({clipPath:window.SXpoly(i/40,W,H,r.left+r.width/2,r.top+r.height/2)});
+  return menu.animate(kf,{duration:dir==='reverse'?800:1050,easing:'cubic-bezier(.6,0,.3,1)',direction:dir,fill:'forwards'});
+}
+function stopAnim(){if(anim){anim.onfinish=null;anim.cancel();anim=null}}
+function openMenu(){
+  if(root.classList.contains('building'))return;
+  stopAnim();
+  menu.style.visibility='visible';menu.style.pointerEvents='auto';
+  try{anim=ink('normal')}catch(x){anim=null}
+  menu.classList.add('open');root.classList.add('menu-open');menu.setAttribute('aria-hidden','false');
+  btn.setAttribute('aria-expanded','true');btn.setAttribute('aria-label','Close menu');
+  var a=menu.querySelector('a');setTimeout(function(){a&&a.focus({preventScroll:true})},600);
+}
+function closeMenu(){
+  if(!menu.classList.contains('open'))return;
+  stopAnim();
+  menu.classList.remove('open');root.classList.remove('menu-open');menu.setAttribute('aria-hidden','true');
+  btn.setAttribute('aria-expanded','false');btn.setAttribute('aria-label','Open menu');
+  function done(){menu.style.visibility='hidden';menu.style.pointerEvents='none';stopAnim()}
+  try{anim=ink('reverse');anim.onfinish=done}catch(x){done()}
+}
+if(btn&&menu){
+  btn.addEventListener('click',function(){menu.classList.contains('open')?closeMenu():openMenu()});
+  menu.addEventListener('click',function(e){if(e.target.closest('a'))closeMenu()});
+  addEventListener('keydown',function(e){if(e.key==='Escape'&&menu.classList.contains('open')){closeMenu();btn.focus()}});
+  addEventListener('resize',function(){if(innerWidth>760&&menu.classList.contains('open'))closeMenu()});
+}
+// ===== opening a review link (#reviews or ?review) lands right on the form =====
+if(window.QUICK){
+  var goRev=function(){var t=document.getElementById('reviews');if(t)window.scrollTo({top:t.getBoundingClientRect().top+window.scrollY,behavior:'instant'})};
+  addEventListener('load',function(){setTimeout(goRev,150)});
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){setTimeout(goRev,150)});
+}
+var cr=$('#copyrv');
+if(cr)cr.addEventListener('click',function(){
+  var link=location.href.split('#')[0].split('?')[0]+'#reviews';
+  function done(){cr.textContent='Link copied';setTimeout(function(){cr.textContent='Copy review link'},2200)}
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(link).then(done,function(){prompt('Copy this link',link)})}else prompt('Copy this link',link);
+});
+// ===== copy email / share =====
+(function(){
+  var c=$('#copyem'),sh=$('#share'),m=$('#cstatus'),EM='arhaansvp00@gmail.com',tm;
+  function say(t){if(!m)return;m.textContent=t;clearTimeout(tm);tm=setTimeout(function(){m.textContent=''},2600)}
+  function copy(t,ok){
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){say(ok)},function(){fallback()})}else fallback();
+    function fallback(){var x=document.createElement('textarea');x.value=t;x.setAttribute('readonly','');x.style.cssText='position:fixed;opacity:0';document.body.appendChild(x);x.select();try{document.execCommand('copy');say(ok)}catch(e){say(t)}x.remove()}
+  }
+  if(c)c.addEventListener('click',function(){copy(EM,'Email address copied.')});
+  if(sh)sh.addEventListener('click',function(){
+    var url=location.href.split('#')[0];
+    if(navigator.share){navigator.share({title:document.title,text:'SilencoreX — free Android apps and websites by Sufiyan',url:url}).catch(function(){})}
+    else copy(url,'Link copied. Paste it anywhere to share.');
+  });
+})();
+// ===== gentle review reminder =====
+try{if(localStorage.getItem('sx_rv'))return;if(Date.now()-(+localStorage.getItem('sx_nudge')||0)<14*864e5)return}catch(x){}
+var t0=Date.now(),shown=false,el=document.createElement('div');
+el.id='nudge';el.className='glass';el.setAttribute('role','dialog');el.setAttribute('aria-label','Leave a review');
+el.innerHTML='<button class="nx" type="button" aria-label="Close">×</button><b>Enjoying SilencoreX?</b><p>If you liked the apps or this site, a quick review would mean a lot to me.</p><div class="nr"><button class="btn dark" type="button" data-a="go">Write a review</button><button class="btn" type="button" data-a="no">Not now</button></div>';
+document.body.appendChild(el);
+function hide(){el.classList.remove('on');try{localStorage.setItem('sx_nudge',String(Date.now()))}catch(x){}}
+function show(){
+  if(shown||root.classList.contains('building')||root.classList.contains('menu-open'))return;
+  var r=document.getElementById('reviews').getBoundingClientRect();
+  if(r.top<innerHeight*.85&&r.bottom>0)return;            // already looking at the review form
+  shown=true;el.classList.add('on');
+}
+el.addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b)return;
+  hide();
+  if(b.dataset.a==='go'){
+    document.getElementById('reviews').scrollIntoView({behavior:'smooth'});
+    setTimeout(function(){var n=document.querySelector('#rform [name=name]');n&&n.focus({preventScroll:true})},800);
+  }
+});
+// after the visitor has scrolled most of the page and spent some time here
+setInterval(function(){
+  var depth=(window.scrollY+innerHeight)/root.scrollHeight;
+  if(depth>.68&&Date.now()-t0>25000)show();
+},2500);
+// desktop: mouse leaves through the top of the window (about to close the tab or go back)
+document.addEventListener('mouseout',function(e){if(!e.relatedTarget&&e.clientY<=0&&Date.now()-t0>12000)show()});
+})();
+</script>
+<script>
+(function(){
+// Always-reachable "Write a review" button: shows after a little scrolling, hides at the form or once reviewed.
+var root=document.documentElement,fab=document.getElementById('rfab'),sec=document.getElementById('reviews');
+if(!fab||!sec)return;
+try{if(localStorage.getItem('sx_rv')){fab.remove();return}}catch(x){}
+function check(){
+  var r=sec.getBoundingClientRect(),inView=r.top<innerHeight*.9&&r.bottom>0;
+  var on=!root.classList.contains('building')&&window.scrollY>240&&!inView;
+  fab.classList.toggle('on',on);
+}
+addEventListener('scroll',check,{passive:true});setInterval(check,1200);check();
+fab.addEventListener('click',function(){setTimeout(function(){var n=document.querySelector('#rform [name=name]');n&&n.focus({preventScroll:true})},900)});
+})();
+</script>
+</body>
+</html>
