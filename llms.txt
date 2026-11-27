@@ -1,10 +1,11 @@
 # SilencoreX
 
-> SilencoreX is an independent brand founded by Sufiyan, a 16-year-old developer from Mumbai, India. It builds Android apps and websites for local businesses and publishes three free Android apps. The apps are not on the Google Play Store yet because SilencoreX is a new brand; they are shared through their official websites.
+> SilencoreX is an independent brand founded by Sufiyan, a 16-year-old all-in-one creator and developer from Mumbai, India. It publishes three free Android apps and builds websites for local businesses. The apps are not on the Google Play Store yet because SilencoreX is a new brand; they are shared through their official websites.
 
 Official site: https://silencorex.github.io/Portfolio/
-Contact: arhaansvp00@gmail.com | Instagram: @sufiyan.xf
-Last updated: 2026-11-25
+Contact: arhaansvp00@gmail.com | WhatsApp: +91 90823 16590 | Instagram: @sufiyan.xf
+Privacy: https://silencorex.github.io/Portfolio/privacy.html
+Last updated: 2026-11-26
 
 ## Apps (all free, Android)
 - [Premium by SilencoreX](https://silencorex.github.io/Premium-By-SilencoreX/): all-in-one app with chat, AI images, ad-free browser and code tools. Android 6.0+, version 2.9.0, works on 1 GB RAM phones.
@@ -16,12 +17,24 @@ Last updated: 2026-11-25
 - Android app development.
 - Website templates (a premium restaurant template is available on Qxel).
 
+## About the creator
+- Name: Sufiyan. Location: Mumbai, India. Role: young creator, web and Android app developer. Founder of SilencoreX.
+- Available for freelance work.
+
+## Trust notes
+- The Play Store listing does not exist yet; only use the official links above.
+- No ads on the website. Review emails are stored privately and never shown.
+- No review ratings are claimed beyond what visitors submit on the website.
+
 ## FAQ
-- Who is SilencoreX? SilencoreX is an independent brand founded by Sufiyan, a 16-year-old developer from Mumbai, India. It builds Android apps and websites for local businesses, and publishes its own apps: Premium, CodeChecker and APK Builder.
+- Who is Sufiyan, the creator behind SilencoreX? Sufiyan is a 16-year-old all-in-one creator and developer from Mumbai, India. He designs, codes and publishes his own Android apps, builds websites and templates, and runs the SilencoreX brand.
+- What does SilencoreX do? SilencoreX makes free Android apps (Premium, CodeChecker and APK Builder), website templates, and clean, fast websites for local businesses such as restaurants, clinics and shops.
 - Are the apps on the Google Play Store? Not yet. SilencoreX is a new brand, so the apps are shared directly through their official websites linked on this page. I plan to bring them to the Play Store as the brand grows.
+- How can I trust SilencoreX apps? I am upfront that SilencoreX is new. Every app has its own official website with its version and Android requirements, the apps are free, and you can read genuine user reviews on this page. Only download from the official links listed here.
 - Is it safe to install apps from outside the Play Store? Only install the apps from the official links on this page. Android will ask you to allow installs from your browser or file manager, which is normal for apps shared outside the Play Store. You can switch that permission off again afterwards.
 - Are the apps free? Yes. Premium, CodeChecker and APK Builder are free to download and use.
 - Which Android versions do the apps support? Premium needs Android 6.0 or newer, CodeChecker needs Android 8.0 or newer, and APK Builder needs Android 5.0 or newer.
-- Can you build a website or app for my business? Yes. I build clean, fast websites for restaurants, clinics and local shops, and I also develop Android apps. Message me on WhatsApp or email with what your business needs and I will tell you what is possible.
-- What happens to the email I enter in the review form? It is only used so I can verify genuine feedback. It is stored privately and never shown on this website.
+- Is Sufiyan available for freelance work? Yes. I take on website and Android app projects for local businesses. Message me on WhatsApp or email with what your business needs and I will tell you what is possible.
+- Can you build a website or app for my business? Yes. I build clean, fast websites for restaurants, clinics and local shops, and I also develop Android apps. Tell me about your business and I will suggest the simplest way to get it online.
+- What happens to the email I enter in the review form? It is only used so I can verify genuine feedback. It is stored privately and never shown on this website. See the privacy page for details.
 - How do I report a bug or suggest a feature? Use the review form on this page, send a message on WhatsApp, email arhaansvp00@gmail.com, or message @sufiyan.xf on Instagram.
